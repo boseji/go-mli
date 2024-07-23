@@ -1,0 +1,57 @@
+# gitignore file
+#
+# go-mli - Boseji's Golang MQTT Logging command line
+#
+# Sources
+# -------
+# https://github.com/boseji/go-mli
+#
+# License
+# -------
+#
+# SPDX: GPL-3.0-or-later
+#
+#   go-mli - Boseji's Golang MQTT Logging command line
+#   Copyright (C) 2024 by Abhijit Bose (aka. Boseji)
+#
+#   This program is free software: you can redistribute it and/or modify 
+#   it under the terms of the GNU General Public License as published by the 
+#   Free Software Foundation, either version 3 of the License, or 
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, 
+#   but WITHOUT ANY WARRANTY; without even the implied warranty 
+#   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#   See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along 
+#   with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Ignore local files
+config.json
+build/
+text.log

@@ -1,0 +1,117 @@
+// cfg.go - Configuration File Handler
+//
+//     ॐ भूर्भुवः स्वः
+//     तत्स॑वि॒तुर्वरे॑ण्यं॒
+//    भर्गो॑ दे॒वस्य॑ धीमहि।
+//   धियो॒ यो नः॑ प्रचो॒दया॑त्॥
+//
+//
+// बोसजी के द्वारा रचित गो-मिल तन्त्राक्ष्
+// ============================
+//
+// यह गो-क्रमादेश आधारित एम.क्यू.टी.टी अधिलेख में प्रचालेखन का तन्त्राक्ष् है।
+//
+// एक रचनात्मक भारतीय उत्पाद।
+//
+// go-mli - Boseji's Golang MQTT Logging command line
+//
+// Easy to use Golang based MQTT Command line logger.
+//
+// Sources
+// -------
+// https://github.com/boseji/go-mli
+//
+// License
+// -------
+//
+// SPDX: GPL-3.0-or-later
+//
+//   go-mli - Boseji's Golang MQTT Logging command line
+//   Copyright (C) 2024 by Abhijit Bose (aka. Boseji)
+//
+//   This program is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by the
+//   Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   This program is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty
+//   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//   See the GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License along
+//   with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+
+// Configuration File Handler
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
+
+type cfg struct {
+	ADDR     string
+	Username string
+	Password string
+	Topics   []string
+}
+
+func (m *cfg) Load(Filename string) error {
+	bs, err := os.ReadFile(Filename)
+	if err != nil {
+		return fmt.Errorf("failed to load file %q :\n %v", Filename, err)
+	}
+
+	err = json.Unmarshal(bs, m)
+	if err != nil {
+		return fmt.Errorf("failed to process the file %q :\n %v", Filename, err)
+	}
+
+	return nil
+}
+
+func (m *cfg) Save(Filename string) error {
+	bs, err := json.MarshalIndent(m, "", "    ")
+	if err != nil {
+		return fmt.Errorf("failed to encode back configuration:\n %v", err)
+	}
+
+	err = os.WriteFile(Filename, bs, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write file %q :\n %v", Filename, err)
+	}
+
+	return nil
+}
+
+func (m cfg) String() string {
+	s := fmt.Sprintf("{\n ADDR: %q Username: %q Password: %q \n",
+		m.ADDR,
+		m.Username,
+		m.Password)
+	s += " Topics: \n"
+	for _, t := range m.Topics {
+		s += fmt.Sprintf("  - %q\n", t)
+	}
+	s += " }\n"
+	return s
+}
+
+func writeTemplate(Filename string) error {
+	m := &cfg{
+		ADDR:     "tcp://192.168.0.0:1883",
+		Username: "Username Here",
+		Password: "Password Here",
+		Topics: []string{
+			"demo",
+			"d1",
+			"Sensor1/Temp",
+			"Sensor1/Humidity",
+		},
+	}
+
+	return m.Save(Filename)
+}
