@@ -54,4 +54,4 @@ go.work.sum
 # Ignore local files
 config.json
 build/
-text.log
+*.log

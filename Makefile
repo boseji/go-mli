@@ -28,8 +28,7 @@
 #   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-
-GOFILES  := cfg.go
+GOFILES  := cfg.go store.go
 
 run:
 	go mod tidy
@@ -48,7 +47,7 @@ test:
 	go mod tidy
 # '-' Helps to Ignore Errors (https://stackoverflow.com/a/2670143)
 	-mkdir build 2> /dev/null
-	go test -v
+	go test -v -race
 
 clean:
 	rm -rf build
