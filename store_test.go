@@ -51,13 +51,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 )
 
 const (
-	TEST_FILE = "test.log"
+	TEST_FILE = "test.csv"
 )
 
 func Test_storeGoroutine(t *testing.T) {
@@ -101,5 +102,91 @@ func Test_storeGoroutine(t *testing.T) {
 			os.Remove(TEST_FILE)
 		})
 
+	}
+}
+
+func Test_recordGoroutine(t *testing.T) {
+	tests := []struct {
+		name     string
+		fnBefore func(t *testing.T, c chan string)
+		msg      string
+		fnAfter  func(t *testing.T, c chan string)
+	}{
+		{
+			name: "Negative test with a filled channel",
+			fnBefore: func(t *testing.T, c chan string) {
+				c <- "Test 1"
+				c <- "Test 2"
+			},
+			msg:     "Test3",
+			fnAfter: func(t *testing.T, c chan string) {},
+		},
+		{
+			name:     "Test the Normal operation",
+			fnBefore: func(t *testing.T, c chan string) {},
+			msg:      "Test1",
+			fnAfter: func(t *testing.T, c chan string) {
+				s := <-c
+				if s != "Test1" {
+					t.Fatalf("Failed to get the correct value: Got = %s Expected = %s",
+						s, "Test1")
+				}
+			},
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			var wg sync.WaitGroup
+			ctx, cancel := context.WithCancel(context.Background())
+			c := make(chan string, 2)
+			wg.Add(1)
+			tt.fnBefore(t, c)
+			go recordGoroutine(c, ctx, &wg, tt.msg, STORE_WAIT)
+			time.Sleep(STORE_WAIT * 3)
+			cancel()
+			tt.fnAfter(t, c)
+			close(c)
+			wg.Wait()
+		})
+
+	}
+}
+
+func Test_getRecorder(t *testing.T) {
+	tests := []struct {
+		name     string
+		t        time.Duration
+		doRecord func(t *testing.T, rec recorderFn)
+		verify   func(t *testing.T, c chan string)
+	}{
+		{
+			name: "Working Record",
+			t:    STORE_WAIT * 2,
+			doRecord: func(t *testing.T, rec recorderFn) {
+				rec("Test1", "Test2")
+			},
+			verify: func(t *testing.T, c chan string) {
+				s := <-c
+				if !strings.Contains(s, "\"Test1\",\"Test2\"") {
+					t.Fatalf("failed to find sub-string \n expected : %s\n got %s",
+						"\"Test1\",\"Test2\"", s)
+				}
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var wg sync.WaitGroup
+			ctx, cancel := context.WithCancel(context.Background())
+			c := make(chan string, 2)
+			rec := getRecorder(c, ctx, &wg, tt.t)
+			tt.doRecord(t, rec)
+			time.Sleep(STORE_WAIT * 3)
+			cancel()
+			tt.verify(t, c)
+			close(c)
+			wg.Wait()
+		})
 	}
 }

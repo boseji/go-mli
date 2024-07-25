@@ -48,8 +48,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -66,7 +68,8 @@ const (
 // storeGoroutine is a Go process that waits for a record to be generated
 // then it writes the same into the supplied filename.
 func storeGoroutine(c <-chan string,
-	ctx context.Context, wg *sync.WaitGroup, storeFile string) {
+	ctx context.Context, wg *sync.WaitGroup,
+	storeFile string) {
 	// Exit with Signalling Completion
 	defer wg.Done()
 	// Check for Files and Write the Header
@@ -110,5 +113,55 @@ func storeGoroutine(c <-chan string,
 			time.Sleep(STORE_WAIT)
 
 		}
+	}
+}
+
+// recordGoroutine is a intermediate process launched to help funnel data
+// to the storage channel. Its designed such that nothing gets blocked
+// when the load increases or there are many competing processes trying
+// to send data on the same channel. It has a fixed timeout,
+// once that expires then this process would just ignore sending anything.
+func recordGoroutine(c chan<- string,
+	ctx context.Context, wg *sync.WaitGroup,
+	s string, t time.Duration) {
+	// Derive a Timeout Context
+	ctx, cancel := context.WithTimeout(ctx, t)
+	defer wg.Done()
+	defer cancel() // Not needed but just in case
+
+	// Process Loop
+	for {
+		// Channel Receiver & Sender
+		select {
+		case <-ctx.Done(): // Timeout Ctx
+			log.Printf("[Store] failed to send record: %s\n", s)
+			return
+		case c <- s: // Success in Sending
+			return
+		default: // Nothing to do do Sleep
+			time.Sleep(STORE_WAIT)
+		}
+	}
+}
+
+// recorderFn defiles a useful 2 fields function to write a timed
+// record through the recorderGoroutine
+type recorderFn func(string, string)
+
+// getRecorder function generates a recroderFn for the application to use
+// when the recording is needed.
+func getRecorder(c chan string,
+	ctx context.Context, wg *sync.WaitGroup,
+	t time.Duration) recorderFn {
+	return func(s1, s2 string) {
+		// Filter out Quotes
+		s1 = strings.Replace(s1, "\"", "\"\"", -1)
+		s2 = strings.Replace(s2, "\"", "\"\"", -1)
+		// Create the Record
+		s := fmt.Sprintf("%q,%q,%q\n",
+			time.Now().Format(time.DateTime),
+			s1, s2)
+		wg.Add(1)
+		go recordGoroutine(c, ctx, wg, s, t)
 	}
 }

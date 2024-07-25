@@ -55,3 +55,4 @@ go.work.sum
 config.json
 build/
 *.log
+*.csv
