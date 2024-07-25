@@ -59,6 +59,7 @@ type cfg struct {
 	Topics   []string
 }
 
+// Load helps to read the supplied JSON file and fill up the configuration.
 func (m *cfg) Load(Filename string) error {
 	bs, err := os.ReadFile(Filename)
 	if err != nil {
@@ -73,6 +74,7 @@ func (m *cfg) Load(Filename string) error {
 	return nil
 }
 
+// Save helps to save back the configuration into the supplied JSON file.
 func (m *cfg) Save(Filename string) error {
 	bs, err := json.MarshalIndent(m, "", "    ")
 	if err != nil {
@@ -87,11 +89,11 @@ func (m *cfg) Save(Filename string) error {
 	return nil
 }
 
+// String implements the Stringer interface to print out the configuration.
 func (m cfg) String() string {
-	s := fmt.Sprintf("{\n ADDR: %q Username: %q Password: %q \n",
+	s := fmt.Sprintf("{\n ADDR: %q Username: %q \n",
 		m.ADDR,
-		m.Username,
-		m.Password)
+		m.Username)
 	s += " Topics: \n"
 	for _, t := range m.Topics {
 		s += fmt.Sprintf("  - %q\n", t)
@@ -100,6 +102,8 @@ func (m cfg) String() string {
 	return s
 }
 
+// writeTemplate helps to create the default JSON file with
+// dummy configuration as a starter.
 func writeTemplate(Filename string) error {
 	m := &cfg{
 		ADDR:     "tcp://192.168.0.0:1883",
