@@ -52,11 +52,16 @@ import (
 	"os"
 )
 
+// cfg stores Configuration for MQTT and Topics needed for logging.
 type cfg struct {
-	ADDR     string
-	Username string
-	Password string
-	Topics   []string
+	ADDR           string
+	Username       string
+	Password       string
+	CAFile         string
+	ClientID       string
+	ClientCertFile string
+	ClientKeyFile  string
+	Topics         []string
 }
 
 // Load helps to read the supplied JSON file and fill up the configuration.
@@ -106,9 +111,13 @@ func (m cfg) String() string {
 // dummy configuration as a starter.
 func writeTemplate(Filename string) error {
 	m := &cfg{
-		ADDR:     "tcp://192.168.0.0:1883",
-		Username: "Username Here",
-		Password: "Password Here",
+		ADDR:           "tcp://192.168.0.0:1883",
+		Username:       "Username Here",
+		Password:       "Password Here",
+		CAFile:         "/path/to/ca.crt-optional",
+		ClientID:       "go-mli-demo",
+		ClientCertFile: "/path/to/user.client.crt-optional",
+		ClientKeyFile:  "/path/to/user.client.key-optional",
 		Topics: []string{
 			"demo",
 			"d1",
