@@ -233,8 +233,8 @@ func Test_Storage(t *testing.T) {
 			time.Sleep(STORE_WAIT / 2)
 			rec(tt.record[0], tt.record[1])
 			time.Sleep(STORE_WAIT * 3)
-			close(c)
 			cancel()
+			close(c)
 			wg.Wait()
 			defer os.Remove(TEST_FILE)
 			// Read back the file for checking.
