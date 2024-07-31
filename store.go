@@ -47,8 +47,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+	"encoding/csv"
 	"log"
 	"os"
 	"strings"
@@ -62,7 +63,7 @@ const (
 	// File permissions for the Log file
 	STORE_PERM = 0644
 	// Header for Log File
-	STORE_HEADER = "Time Stamp,Topic,Data\n"
+	STORE_HEADER = "Time Stamp,Topic,Data"
 )
 
 // storeGoroutine is a Go process that waits for a record to be generated
@@ -75,9 +76,14 @@ func storeGoroutine(c <-chan string,
 	// Check for Files and Write the Header
 	if _, err := os.Stat(storeFile); os.IsNotExist(err) {
 		log.Println("[Store] log file does not exists creating one")
-		err := os.WriteFile(storeFile,
-			[]byte(STORE_HEADER),
-			STORE_PERM)
+		// Create a Writable Buffer for String with CSV Format
+		b := bytes.NewBufferString("")
+		w := csv.NewWriter(b)
+		// Create the Record
+		w.Write(strings.Split(STORE_HEADER, ","))
+		w.Flush() // For ce Write to String Buffer
+		// Write File
+		err := os.WriteFile(storeFile, b.Bytes(), STORE_PERM)
 		if err != nil {
 			log.Println("[Store] Could not initialize the log file:\n ", err)
 			return
@@ -154,13 +160,18 @@ func getRecorder(c chan string,
 	ctx context.Context, wg *sync.WaitGroup,
 	t time.Duration) recorderFn {
 	return func(s1, s2 string) {
-		// Filter out Quotes
-		s1 = strings.Replace(s1, "\"", "\"\"", -1)
-		s2 = strings.Replace(s2, "\"", "\"\"", -1)
+		// Create a Writable Buffer for String with CSV Format
+		b := bytes.NewBufferString("")
+		w := csv.NewWriter(b)
 		// Create the Record
-		s := fmt.Sprintf("%q,%q,%q\n",
-			time.Now().Format(time.DateTime),
-			s1, s2)
+		// - Special Time format to help with automatic time recognition
+		//    under the LibreOffice Calc for time stamp in 'CSV' format.
+		w.Write([]string{time.Now().Format("2006-01-02T15:04:05" /*time.RFC3339*/),
+			s1, s2})
+		w.Flush() // For ce Write to String Buffer
+		// Get back the String from CSV
+		s := b.String()
+		// Run the Recorder
 		wg.Add(1)
 		go recordGoroutine(c, ctx, wg, s, t)
 	}

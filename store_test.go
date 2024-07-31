@@ -49,7 +49,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"encoding/csv"
 	"os"
 	"strings"
 	"sync"
@@ -69,15 +69,25 @@ func Test_storeGoroutine(t *testing.T) {
 		{
 			name: "Positive test Sending message",
 			fn: func(t *testing.T, c chan string) {
-				s := fmt.Sprintf("%q,\"Test\",\"Data\"",
-					time.Now().Format(time.RFC3339))
+				// Create a Writable Buffer for String with CSV Format
+				b := bytes.NewBufferString("")
+				w := csv.NewWriter(b)
+				// Create the Record
+				// - Special Time format to help with automatic time recognition
+				//    under the LibreOffice Calc for time stamp in 'CSV' format.
+				w.Write([]string{time.Now().Format("2006-01-02T15:04:05" /*time.RFC3339*/),
+					"Test1", "Test2"})
+				w.Flush() // For ce Write to String Buffer
+				// Get back the String from CSV
+				s := b.String()
+				// Send it
 				c <- s
 				time.Sleep(100 * time.Millisecond)
 				content, err := os.ReadFile(TEST_FILE)
 				if err != nil {
 					t.Fatal("Failed to read the generated log file")
 				}
-				if !bytes.Equal(content, []byte(STORE_HEADER+s)) {
+				if !bytes.Equal(content, []byte(STORE_HEADER+"\n"+s)) {
 					t.Fatalf("Expected: \n%q\n Got:\n %q", STORE_HEADER+s,
 						string(content))
 				}
@@ -168,9 +178,9 @@ func Test_getRecorder(t *testing.T) {
 			},
 			verify: func(t *testing.T, c chan string) {
 				s := <-c
-				if !strings.Contains(s, "\"Test1\",\"Test2\"") {
+				if !strings.Contains(s, "Test1,Test2") {
 					t.Fatalf("failed to find sub-string \n expected : %s\n got %s",
-						"\"Test1\",\"Test2\"", s)
+						"Test1,Test2", s)
 				}
 			},
 		},
@@ -187,6 +197,54 @@ func Test_getRecorder(t *testing.T) {
 			tt.verify(t, c)
 			close(c)
 			wg.Wait()
+		})
+	}
+}
+
+func Test_Storage(t *testing.T) {
+	tests := []struct {
+		name   string
+		record [2]string
+		check  string
+	}{
+		{
+			name:   "Basic Test",
+			record: [2]string{"Test1", "Test2"},
+			check:  ",Test1,Test2",
+		},
+		{
+			name:   "Quote Replace Test",
+			record: [2]string{"\"Test1\"", "Test2"},
+			check:  `,"""Test1""",Test2`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var wg sync.WaitGroup
+			ctx, cancel := context.WithCancel(context.Background())
+			c := make(chan string, 2)
+			// Setup Writer
+			wg.Add(1)
+			go storeGoroutine(c, ctx, &wg, TEST_FILE)
+			// Get Writable Function
+			rec := getRecorder(c, ctx, &wg, STORE_WAIT)
+			// Wait and Send data
+			time.Sleep(STORE_WAIT / 2)
+			rec(tt.record[0], tt.record[1])
+			time.Sleep(STORE_WAIT * 3)
+			close(c)
+			cancel()
+			wg.Wait()
+			defer os.Remove(TEST_FILE)
+			// Read back the file for checking.
+			buf, err := os.ReadFile(TEST_FILE)
+			if err != nil {
+				t.Fatalf("failed to read the test file.")
+			}
+			if !strings.Contains(string(buf), tt.check) {
+				t.Errorf("failed to find the string %q", tt.check)
+			}
 		})
 	}
 }
