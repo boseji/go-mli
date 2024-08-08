@@ -91,7 +91,7 @@ func setupMQTT(m cfg,
 			log.Printf("[MQTT] Received message: %q\n from topic: %q\n",
 				msg.Payload(), msg.Topic())
 			// Send for Record
-			rec(string(msg.Payload()), msg.Topic())
+			rec(msg.Topic(), string(msg.Payload()))
 		})
 	opts.SetOnConnectHandler(
 		func(client mqtt.Client) {

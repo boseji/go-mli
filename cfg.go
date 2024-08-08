@@ -96,15 +96,8 @@ func (m *cfg) Save(Filename string) error {
 
 // String implements the Stringer interface to print out the configuration.
 func (m cfg) String() string {
-	s := fmt.Sprintf("{\n ADDR: %q Username: %q \n",
-		m.ADDR,
-		m.Username)
-	s += " Topics: \n"
-	for _, t := range m.Topics {
-		s += fmt.Sprintf("  - %q\n", t)
-	}
-	s += " }\n"
-	return s
+	bs, _ := json.MarshalIndent(m, "", "  ")
+	return string(bs)
 }
 
 // writeTemplate helps to create the default JSON file with

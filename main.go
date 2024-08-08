@@ -45,3 +45,127 @@
 
 // Main Program
 package main
+
+import (
+	"context"
+	"flag"
+	"log"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"sync"
+	"time"
+)
+
+func main() {
+	var wg sync.WaitGroup
+	var cfg cfg
+
+	// Context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Define Flags
+	cfgFile := flag.String("config", "config.json",
+		"JSON File containing the Configuration.")
+	flag.Parse()
+
+	log.Println("[main] Flag ", flag.Parsed())
+	// Get the Config File
+	configFile, err := filepath.Abs(*cfgFile)
+	if err != nil {
+		log.Fatalf("[main][ERROR] Failed to get the Path for %q\n", *cfgFile)
+	}
+
+	// Check if the Config File exists
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		log.Fatalf("[main][ERROR] Configuration file does not exists.")
+	}
+
+	// Load Configuration
+	err = cfg.Load(configFile)
+	if err != nil {
+		log.Fatalf("[main][ERROR] Failed to load the Config file %q -\n%v",
+			configFile, err)
+	}
+
+	// Load Message
+	log.Println("[main] `go-mli` Boseji's Golang MQTT Logging command line")
+	log.Println("[main] Configuration Loaded -", configFile)
+	log.Println("[main] Present Configuration: \n", cfg)
+
+	// Create the Handlers
+	loggingFile := time.Now().Format("log-2006-01-02T15-04-05.csv")
+	logChan := make(chan string, len(cfg.Topics)*2)
+	recFn := getRecorder(logChan, ctx, &wg, STORE_WAIT*2)
+
+	// Handle Ctrl+C
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	exitChan := make(chan struct{})
+	isError := false
+
+	// Start the Storage Process
+	wg.Add(1)
+	go storeGoroutine(logChan, ctx, &wg, loggingFile)
+
+	// Ctrl+C Go Routine
+	wg.Add(1) // For the Ctrl+C Go Routine
+	go func() {
+		defer wg.Done()
+		select {
+		case <-signalChan: // first signal, cancel context
+			cancel()
+			log.Println()
+			log.Println("[INTR] Intercepted a Ctrl+C..")
+			break
+		case <-ctx.Done():
+			log.Println("[INTR][ERROR] Intercepted Error..")
+			signal.Stop(signalChan)
+			isError = true
+			break
+		}
+		signal.Stop(signalChan)
+		close(exitChan) // For Exit
+	}()
+
+	// Create MQTT Connection
+	mqttOptions := setupMQTT(cfg, cancel, recFn)
+	client, err := connectMQTT(mqttOptions)
+	if err != nil {
+		log.Printf("[main][ERROR] Failed to connect to the MQTT Broker - \n %v", err)
+		cancel()
+	}
+
+	// Subscribe to the desired topics
+	for _, topic := range cfg.Topics {
+		err = subscribeMQTT(client, topic)
+		if err != nil {
+			log.Printf("[main][ERROR] Failed to subscribe to %q\n %v\n",
+				topic, err)
+			cancel()
+		}
+	}
+
+	// Wait for Exit with SIGINT or SIGKILL
+	<-exitChan
+	log.Println("[main] Closing connection..")
+	err = disconnectMQTT(client, 20)
+	if err != nil {
+		log.Printf("[main][ERROR] Failed to close MQTT Connection : %v\n", err)
+		cancel()
+	}
+
+	// Error in exit
+	if isError {
+		log.Println("[main][ERROR] Exiting due an Error or failure.")
+		os.Exit(1)
+	}
+
+	// Wait for Every GoRoutine to Terminate
+	wg.Wait()
+
+	// Just to Satisfy Make
+	log.Println("[main] Program Terminated Normally.")
+	os.Exit(0)
+}

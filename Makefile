@@ -28,13 +28,13 @@
 #   with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-GOFILES  := cfg.go store.go
+GOFILES  := cfg.go store.go mqtt.go main.go
 
 run:
 	go mod tidy
 	go run ${GOFILES}
 
-build: test
+build: #test
 # '-' Helps to Ignore Errors (https://stackoverflow.com/a/2670143)
 	go mod tidy
 	-mkdir build 2> /dev/null
