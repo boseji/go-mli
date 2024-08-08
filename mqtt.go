@@ -88,7 +88,7 @@ func setupMQTT(m cfg,
 	// Set Callbacks
 	opts.SetDefaultPublishHandler(
 		func(client mqtt.Client, msg mqtt.Message) {
-			log.Printf("[MQTT] Received message: %q\n from topic: %q\n",
+			log.Printf("[MQTT] Received message: %q from topic: %q\n",
 				msg.Payload(), msg.Topic())
 			// Send for Record
 			rec(msg.Topic(), string(msg.Payload()))

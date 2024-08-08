@@ -34,9 +34,9 @@ run:
 	go mod tidy
 	go run ${GOFILES}
 
-build: #test
-# '-' Helps to Ignore Errors (https://stackoverflow.com/a/2670143)
+build: test
 	go mod tidy
+# '-' Helps to Ignore Errors (https://stackoverflow.com/a/2670143)
 	-mkdir build 2> /dev/null
 	GOOS="windows/amd64" & go build -o build/mli_windows_x64.exe ${GOFILES}
 	upx --best build/mli_windows_x64.exe
