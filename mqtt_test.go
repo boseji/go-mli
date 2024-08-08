@@ -166,7 +166,7 @@ func Test_connectMQTT(t *testing.T) {
 			},
 		},
 		{
-			name: "Basic Test using setupMQTT",
+			name: "Basic Test using setupMQTT to test.mosquitto.org",
 			args: args{
 				optsFn: func(t *testing.T) *mqtt.ClientOptions {
 					_, cancel := context.WithCancel(context.Background())
@@ -180,7 +180,7 @@ func Test_connectMQTT(t *testing.T) {
 			},
 		},
 		{
-			name: "Auth Test MQTT, unencrypted, authenticated",
+			name: "Auth Test MQTT, unencrypted, authenticated to test.mosquitto.org",
 			args: args{
 				optsFn: func(t *testing.T) *mqtt.ClientOptions {
 					_, cancel := context.WithCancel(context.Background())
@@ -229,22 +229,40 @@ func Test_connectMQTT(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		// {
-		// 	name: "Secure Test MQTT, encrypted, unauthenticated",
-		// 	args: args{
-		// 		optsFn: func(t *testing.T) *mqtt.ClientOptions {
-		// 			_, cancel := context.WithCancel(context.Background())
-		// 			rec := dummyRecorderFn(t)
+		{
+			name: "Secure Test MQTT, encrypted, unauthenticated - broker.emqx.io",
+			args: args{
+				optsFn: func(t *testing.T) *mqtt.ClientOptions {
+					_, cancel := context.WithCancel(context.Background())
+					rec := dummyRecorderFn(t)
 
-		// 			got := setupMQTT(cfg{
-		// 				ADDR:     "tcps://test.mosquitto.org:8883",
-		// 				ClientID: "go-mli-testing-connectMQTT",
-		// 				//CAFile:   "./others/mosquitto.org.crt",
-		// 			}, cancel, rec)
-		// 			return got
-		// 		},
-		// 	},
-		// },
+					got := setupMQTT(cfg{
+						ADDR:     "mqtts://broker.emqx.io:8883",
+						ClientID: "go-mli-testing-connectMQTT",
+						Username: "emqx",
+						Password: "public",
+					}, cancel, rec)
+					return got
+				},
+			},
+		},
+		{
+			name: "Secure Test MQTT, encrypted, unauthenticated(only Username) - broker.emqx.io",
+			args: args{
+				optsFn: func(t *testing.T) *mqtt.ClientOptions {
+					_, cancel := context.WithCancel(context.Background())
+					rec := dummyRecorderFn(t)
+
+					got := setupMQTT(cfg{
+						ADDR:     "mqtts://broker.emqx.io:8883",
+						ClientID: "go-mli-testing-connectMQTT",
+						Username: "emqx",
+						Password: "public",
+					}, cancel, rec)
+					return got
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
