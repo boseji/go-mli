@@ -103,6 +103,9 @@ func setupMQTT(m cfg,
 			cancel()
 		})
 
+	// Clean Sessions for each run
+	opts.SetCleanSession(true)
+
 	return opts
 }
 
