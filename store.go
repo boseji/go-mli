@@ -75,7 +75,7 @@ func storeGoroutine(c <-chan string,
 	defer wg.Done()
 	// Check for Files and Write the Header
 	if _, err := os.Stat(storeFile); os.IsNotExist(err) {
-		log.Println("[Store] log file does not exists creating one")
+		log.Printf("[Store] Creating log file %q\n", storeFile)
 		// Create a Writable Buffer for String with CSV Format
 		b := bytes.NewBufferString("")
 		w := csv.NewWriter(b)

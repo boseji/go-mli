@@ -123,6 +123,9 @@ func connectMQTT(opts *mqtt.ClientOptions) (mqtt.Client, error) {
 // disconnectMQTT helps to disconnect the client within a given time period
 // supplied in number of milliseconds.
 func disconnectMQTT(client mqtt.Client, ms uint) error {
+	if client == nil {
+		return fmt.Errorf("no client")
+	}
 	if client.IsConnected() {
 		client.Disconnect(ms)
 		log.Println("[MQTT] Disconnected.")
@@ -134,6 +137,9 @@ func disconnectMQTT(client mqtt.Client, ms uint) error {
 // subscribeMQTT helps to create subscription to the supplied topics
 // for the client.
 func subscribeMQTT(client mqtt.Client, topic string) error {
+	if client == nil {
+		return fmt.Errorf("no client")
+	}
 	token := client.Subscribe(topic, 1, nil)
 	if token.Wait() && token.Error() != nil {
 		return fmt.Errorf("failed to subscribe to %q:\n %v",

@@ -74,7 +74,6 @@ func main() {
 	fmt.Println("--------------------------------------------------")
 	fmt.Println(" Version: " + version)
 	fmt.Println()
-	defer fmt.Println() // Clearing the Last line
 
 	// Define Flags
 	cfgFile := flag.String("config", "config.json",
@@ -124,10 +123,6 @@ func main() {
 	exitChan := make(chan struct{})
 	isError := false
 
-	// Start the Storage Process
-	wg.Add(1)
-	go storeGoroutine(logChan, ctx, &wg, loggingFile)
-
 	// Ctrl+C Go Routine
 	wg.Add(1) // For the Ctrl+C Go Routine
 	go func() {
@@ -156,28 +151,40 @@ func main() {
 		cancel()
 	}
 
-	// Subscribe to the desired topics
-	for _, topic := range cfg.Topics {
-		err = subscribeMQTT(client, topic)
-		if err != nil {
-			log.Printf("[main][ERROR] Failed to subscribe to %q\n %v\n",
-				topic, err)
-			cancel()
+	// Only upon Successful Connection
+	if client != nil {
+		// Start the Storage Process
+		wg.Add(1)
+		go storeGoroutine(logChan, ctx, &wg, loggingFile)
+
+		// Subscribe to the desired topics
+		for _, topic := range cfg.Topics {
+			err = subscribeMQTT(client, topic)
+			if err != nil {
+				log.Printf("[main][ERROR] Failed to subscribe to %q\n %v\n",
+					topic, err)
+				cancel()
+			}
 		}
 	}
 
 	// Wait for Exit with SIGINT or SIGKILL
 	<-exitChan
-	log.Println("[main] Closing connection..")
-	err = disconnectMQTT(client, 20)
-	if err != nil {
-		log.Printf("[main][ERROR] Failed to close MQTT Connection : %v\n", err)
-		cancel()
+
+	// Only upon Successful Connection
+	if client != nil {
+		log.Println("[main] Closing connection..")
+		err = disconnectMQTT(client, 20)
+		if err != nil {
+			log.Printf("[main][ERROR] Failed to close MQTT Connection : %v\n", err)
+			cancel()
+		}
 	}
 
 	// Error in exit
 	if isError {
 		log.Println("[main][ERROR] Exiting due an Error or failure.")
+		fmt.Println()
 		os.Exit(1)
 	}
 
@@ -186,5 +193,6 @@ func main() {
 
 	// Just to Satisfy Make
 	log.Println("[main] Program Terminated Normally.")
+	fmt.Println()
 	os.Exit(0)
 }
