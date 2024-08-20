@@ -49,12 +49,17 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sync"
 	"time"
+)
+
+const (
+	version = "0.0.3"
 )
 
 func main() {
@@ -65,12 +70,26 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	fmt.Println("\n go-mli Boseji's Golang MQTT Logging command line")
+	fmt.Println("--------------------------------------------------")
+	fmt.Println(" Version: " + version)
+	fmt.Println()
+	defer fmt.Println() // Clearing the Last line
+
 	// Define Flags
 	cfgFile := flag.String("config", "config.json",
 		"JSON File containing the Configuration.")
+	ver := flag.Bool("v", false, "Version number of the program")
 	flag.Parse()
 
-	log.Println("[main] Flag ", flag.Parsed())
+	log.Println("[main] Flag Processed: ", flag.Parsed())
+
+	// Print version only
+	if *ver {
+		log.Println("[main] Program Version :" + version)
+		return
+	}
+
 	// Get the Config File
 	configFile, err := filepath.Abs(*cfgFile)
 	if err != nil {
