@@ -52,7 +52,7 @@ go.work
 go.work.sum
 
 # Ignore local files
-config.json
+config*.json
 build/
 *.log
 *.csv
