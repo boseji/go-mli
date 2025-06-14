@@ -4,26 +4,40 @@
 #
 # go-mli - Boseji's Golang MQTT Logging command line
 #
-# IoT Simulator Program
-# ----------------------
+# Python IoT Simulator Program - Part of the `go-mli` Project
+# ------------------------------------------------------------
 #
 # A script to simulate multiple IoT devices publishing synthetic sensor data to an MQTT broker.
 # Supports waveforms like linear, noise, sinusoidal, square, triangle, and sawtooth.
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; version 2 of the License only.
+# Sources
+# -------
+# https://github.com/boseji/go-mli
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# License
+# -------
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+#   go-mli - Boseji's Golang MQTT Logging command line
+#   Copyright (C) 2024 by Abhijit Bose (aka. Boseji)
 #
-# Dependencies:
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License version 2 only
+#   as published by the Free Software Foundation.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+#  SPDX-License-Identifier: GPL-2.0-only
+#  Full Name: GNU General Public License v2.0 only
+#  Please visit <https://spdx.org/licenses/GPL-2.0-only.html> for details.
+#
+#
+# Dependencies
+# -------------
 # - paho-mqtt
 # - numpy
 # Install via: pip install paho-mqtt numpy
