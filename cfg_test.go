@@ -24,23 +24,23 @@
 // License
 // -------
 //
-// SPDX: GPL-3.0-or-later
-//
 //   go-mli - Boseji's Golang MQTT Logging command line
 //   Copyright (C) 2024 by Abhijit Bose (aka. Boseji)
 //
 //   This program is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU General Public License as published by the
-//   Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
+//   it under the terms of the GNU General Public License version 2 only
+//   as published by the Free Software Foundation.
 //
 //   This program is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty
-//   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-//   See the GNU General Public License for more details.
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
-//   You should have received a copy of the GNU General Public License along
-//   with this program. If not, see <https://www.gnu.org/licenses/>.
+//   You should have received a copy of the GNU General Public License
+//   along with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+//  SPDX-License-Identifier: GPL-2.0-only
+//  Full Name: GNU General Public License v2.0 only
+//  Please visit <https://spdx.org/licenses/GPL-2.0-only.html> for details.
 //
 
 // Configuration File Handler - Tests
